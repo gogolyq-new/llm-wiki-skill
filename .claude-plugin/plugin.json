@@ -1,0 +1,8 @@
+{
+  "name": "llm-wiki",
+  "description": "Teach Claude Code to build and maintain a personal LLM Wiki — a persistent, compounding knowledge base",
+  "version": "0.1.0",
+  "author": "gogolyq-new",
+  "homepage": "https://github.com/gogolyq-new/llm-wiki-skill",
+  "license": "MIT"
+}
