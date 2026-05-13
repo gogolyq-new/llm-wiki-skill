@@ -5,7 +5,7 @@ description: |
   Three operations: ingest (add knowledge), query (ask questions), lint (health check).
   Use when: user wants to build a knowledge base, ingest articles, query accumulated knowledge, or check wiki health.
   Init: "/wiki init", "初始化知识库", "setup wiki"
-version: 0.1.0
+version: 0.2.0
 author: gogolyq-new
 ---
 
@@ -48,18 +48,38 @@ author: gogolyq-new
 
 Source can be: URL, pasted text, or file path.
 
+0. Pre-check:
+   - If `wiki/` directory doesn't exist → stop, prompt user to run `/wiki init` first
+   - If source is URL → fetch content via web_fetch; on failure ask user to paste content
+   - Search `wiki/log.md` for prior ingest of same source → warn user before proceeding
 1. Save raw content → `raw/articles/` or `raw/projects/` (choose by type)
 2. Extract key concepts, entities, relationships
 3. For each concept/entity:
    - If wiki page exists → update it (add new info, cross-references)
-   - If not → create new page in appropriate subdirectory
-4. Update `wiki/index.md` — add/update entry with one-line summary
-5. Append to `wiki/log.md`:
+   - If not → create new page following this format:
+     ```
+     # <Title>
+
+     <One-paragraph summary — what this IS, in 2-3 sentences>
+
+     ## <Sections as needed>
+
+     → see also: [Related Page](relative-path.md)
+
+     ## Sources
+     - <raw file path or URL that contributed to this page>
+     ```
+4. Build cross-references:
+   - Same concept mentioned in 2+ pages → add `→ see also` links between them
+   - New entity relates to existing concept → link both directions
+   - Do NOT link unrelated pages just to increase connectivity
+5. Update `wiki/index.md` — add/update entry with one-line summary
+6. Append to `wiki/log.md`:
    ```
    ## [YYYY-MM-DD] ingest | <source title>
    - <what was added/updated>
    ```
-6. Output:
+7. Output:
    ```
    → 操作: ingest
    → 来源: <source title>
@@ -82,8 +102,11 @@ Completion criteria: index updated + log appended + pages created/updated.
 2. Check orphan pages (no inbound links from other pages)
 3. Check `wiki/index.md` consistency with actual files
 4. Check `Sources` references point to existing files
-5. Report as checklist, do NOT auto-fix
-6. Output:
+5. Check page format: every page has `# Title` + summary paragraph + `## Sources` section
+6. Check page length: flag pages > 80 lines as candidates for splitting
+7. Check freshness: pages whose Sources all predate 90 days → flag as potentially stale
+8. Report as checklist, do NOT auto-fix
+9. Output:
    ```
    → 操作: lint
    → 结果: N 项通过, M 项需处理
@@ -98,7 +121,13 @@ Completion criteria: index updated + log appended + pages created/updated.
 - Keep wiki pages concise (< 80 lines; split if longer)
 - Add cross-references: `→ see also: [Page](relative-path.md)`
 - Every wiki page starts with `# Title` + one-paragraph summary
+- Every wiki page ends with `## Sources` listing contributing raw files/URLs
 - Match existing naming style (lowercase-slug.md)
+- On failure, output:
+  ```
+  ✗ 失败: <reason>
+  → 建议: <next step>
+  ```
 
 ### AVOID
 AVOID modifying files in raw/ — they are immutable source of truth
